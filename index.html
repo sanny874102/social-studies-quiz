@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>五年級社會科 線上練習大題庫</title>
+    <title>五年級社會科線上練習大題庫（阿妮的版本）</title>
     <!-- 引入 Tailwind CSS 與 FontAwesome 圖標 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,16 +12,16 @@
         body { font-family: 'Noto Sans TC', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-50 min-body flex flex-col items-center justify-center p-4 min-h-screen">
+<body class="bg-slate-50 flex flex-col items-center justify-center p-4 min-h-screen">
 
     <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-6 md:p-8 space-y-6">
         
         <!-- 標題區 -->
         <div class="text-center space-y-2">
             <h1 class="text-2xl md:text-3xl font-bold text-blue-600 flex items-center justify-center gap-2">
-                <i class="fa-solid id-badge fa-book-open"></i> 五年級社會科 線上練習大題庫
+                <i class="fa-solid fa-book-open"></i> 五年級社會科 線上練習大題庫
             </h1>
-            <p class="text-slate-600 text-sm md:text-base">範圍：翰林版 五上 第 1、2 單元（整合甲卷、乙卷完整題庫）</p>
+            <p class="text-slate-600 text-sm md:text-base">範圍：第一~二單元（整合甲卷、乙卷完整試題）</p>
         </div>
 
         <div id="setup-screen" class="space-y-6">
@@ -34,10 +34,239 @@
                     <select id="question-count" class="w-full md:w-auto min-w-[240px] px-4 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 font-medium">
                         <option value="10">挑戰 10 題（快速隨機練習）</option>
                         <option value="25">挑戰 25 題（精選中量測驗）</option>
-                        <option value="all" selected>挑戰全部題庫（共 69 題）</option>
+                        <option value="all" selected>挑戰全部題庫（共 50 題）</option>
                     </select>
                 </div>
             </div>
 
             <!-- 開始按鈕 -->
-            <button onclick="startQuiz()" class="w-full py
+            <button onclick="startQuiz()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-lg">
+                <i class="fa-solid fa-play"></i> 開始新測驗
+            </button>
+        </div>
+
+        <!-- 測驗進行畫面 (預設隱藏) -->
+        <div id="quiz-screen" class="hidden space-y-6">
+            <div class="flex justify-between items-center border-b pb-3">
+                <span id="progress-text" class="text-slate-500 font-medium">題目 1 / 10</span>
+                <span id="score-text" class="text-blue-600 font-bold">目前得分：0 分</span>
+            </div>
+
+            <div id="question-container" class="space-y-4">
+                <!-- 動態載入題目 -->
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow transition duration-200">
+                    下一題 <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 結算畫面 (預設隱藏) -->
+        <div id="result-screen" class="hidden text-center space-y-6 py-6">
+            <div class="space-y-2">
+                <h2 class="text-3xl font-bold text-slate-800">🎉 測驗完成！</h2>
+                <p id="final-score" class="text-2xl font-bold text-blue-600"></p>
+            </div>
+            <button onclick="resetQuiz()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition duration-200">
+                <i class="fa-solid fa-rotate-right mr-1"></i> 重新測驗
+            </button>
+        </div>
+
+        <!-- 分享與網址區 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-3">
+            <span class="text-sm font-medium text-slate-600 flex items-center gap-2">
+                <i class="fa-solid fa-globe text-blue-500"></i> 分享測驗網址：
+            </span>
+            <div class="flex w-full md:w-auto gap-2">
+                <input type="text" id="share-url" readonly value="https://sanny874102.github.io/social-study/" class="w-full md:w-80 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-600 focus:outline-none">
+                <button onclick="copyUrl()" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg shadow transition flex items-center gap-1 shrink-0">
+                    <i class="fa-solid fa-copy"></i> 複製網址
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 完整的阿妮版本題庫資料 (對應提供之月考卷範圍)
+        const allQuestions = [
+            // 是非題
+            { type: "TF", q: "原住民族的祖先認為萬物皆有神靈，相信「萬物有靈」。", ans: true, explanation: "原住民族傳統信仰中普遍相信萬物有靈。" },
+            { type: "TF", q: "媽祖是跨地域的信仰，擁有眾多的信眾。", ans: true, explanation: "媽祖是臺灣非常普遍且跨地域的重要民間信仰。" },
+            { type: "TF", q: "發表毀損別人名譽的言論，並不會受到任何處罰。", ans: false, explanation: "發表毀損他人名譽的言論可能會觸犯法律而受罰。" },
+            { type: "TF", q: "人們會利用岬灣修築港口，從事航運、漁業等活動。", ans: true, explanation: "岬灣地形曲折，常被用來修築港口與從事漁業航運。" },
+            { type: "TF", q: "「規範」是社會群體共同認可與遵守的行為標準。", ans: true, explanation: "規範即是社會成員共同認可與遵守的行為準則。" },
+            { type: "TF", q: "某架飛機從臺灣出發，依最短路徑飛往韓國，其飛行過程會經過巴士海峽。", ans: false, explanation: "飛往韓國會經過東海，而巴士海峽位於臺灣南方（通往菲律賓）。" },
+            { type: "TF", q: "如果傳統規範與現代社會需求產生衝突，政府可以修法處理。", ans: true, explanation: "隨著時代變遷與社會需求，政府可以透過修法來調整規範。" },
+            { type: "TF", q: "卑南遺址是臺灣舊石器時期中最具代表性的遺址，當時已能製作出精美的打磨石器。", ans: false, explanation: "卑南遺址屬於「新石器時期」，舊石器時期代表為長濱遺址。" },
+            { type: "TF", q: "倫理道德規範哪些行為違法，一旦違反就會受到公權力處罰。", ans: false, explanation: "規範違法行為並受公權力處罰的是「法律規範」。" },
+            { type: "TF", q: "史前人類學會簡單農耕及飼養家畜後，逐漸開始定居生活。", ans: true, explanation: "農耕與飼養家畜讓人們得以穩定取得食物，進而發展出定居生活。" },
+            { type: "TF", q: "考古學家主要以器物材質和製作方法等差異，劃分舊石器時期、新石器時期及金屬器時期。", ans: true, explanation: "史前時代是以工具材質與製作技術來進行分期的。" },
+            { type: "TF", q: "未成年人違法時，沒有法律可以加以處置。", ans: false, explanation: "我國訂有少年事件處理法等相關法律來妥善處置與輔導未成年人。" },
+            { type: "TF", q: "早期移民來臺的漢人，會將家鄉的神像奉請來臺，信仰也成為移民團結的重要媒介。", ans: true, explanation: "漢人移民渡海來臺時常奉請家鄉神像，凝聚社群力量。" },
+            { type: "TF", q: "原住民族以口述的神話與傳說，世代傳承生活禁忌與祖靈訓示。", ans: true, explanation: "口述神話與傳說是原住民族傳承智慧與禁忌的重要方式。" },
+            { type: "TF", q: "在花蓮縣海岸看到的海景，屬於太平洋海域。", ans: true, explanation: "臺灣東部海岸面向太平洋。" },
+            { type: "TF", q: "風俗習慣是人們受自然環境和歷史文化影響，累積的生活方式。", ans: true, explanation: "風俗習慣反映了長久以來累積的生活經驗與文化。" },
+            { type: "TF", q: "西部海岸有較多曲折的海岸線和形狀奇特的岩石。", ans: false, explanation: "曲折海岸線與奇岩怪石主要分布在北部或東部海岸，西部多沙岸與平直海岸。" },
+            { type: "TF", q: "臺灣地理位置優越，是亞洲與太平洋海、空運的重要樞紐。", ans: true, explanation: "臺灣位於東亞交通要衝，是重要的海空運樞紐。" },
+            { type: "TF", q: "南海諸島位於臺灣島的東南方。", ans: false, explanation: "南海諸島位於臺灣島的南方與西南方。" },
+            { type: "TF", q: "蘭嶼位於臺灣島東側的太平洋海域上。", ans: true, explanation: "蘭嶼位於臺灣東南方太平洋海域上。" },
+
+            // 選擇題
+            { type: "MC", q: "下列關於早期來臺漢人移民宗教信仰和宗族組織的敘述，哪一項錯誤？", options: ["會將家鄉廟宇的神像奉請來臺", "同姓的族群常聚居在一起，形成宗族組織", "「庫巴」為男子集會所，用於討論宗族事務", "廟宇是社區重要的信仰與活動中心"], ans: 2 },
+            { type: "MC", q: "下列哪一個史前遺址的人們，尚未發展出農耕活動？", options: ["圓山遺址", "卑南遺址", "十三行遺址", "八仙洞遺址"], ans: 3 },
+            { type: "MC", q: "下列哪項是生活中的規範之一？", options: ["風俗習慣", "倫理道德", "宗教信仰", "以上都是"], ans: 3 },
+            { type: "MC", q: "下列有關臺灣海岸地形的敘述，哪一項錯誤？", options: ["東部海岸斷崖聳立", "北部海岸有奇岩怪石", "西部海岸地形陡峭，出海口有沙洲", "南部恆春半島海域溫暖，形成特殊珊瑚礁海岸"], ans: 2 },
+            { type: "MC", q: "原住民族的社會制度，有些會以親族劃分，像是阿美族的母系社會，下列哪一項是母系社會的特色之一？", options: ["財產大多由女兒繼承", "婚後，男方會隨妻子居住", "子女的姓氏會隨母姓", "以上選項都是"], ans: 3 },
+            { type: "MC", q: "臺灣與下列哪一個國家，隔著巴士海峽相鄰？", options: ["菲律賓", "中國", "新加坡", "柬埔寨"], ans: 0 },
+            { type: "MC", q: "下列哪一個原因導致臺灣島的高度持續增加，且地震頻繁發生？", options: ["板塊推擠", "颱風頻繁", "海流改變", "人口過多"], ans: 0 },
+            { type: "MC", q: "「位於中央山脈的，過去常有許多野生動物在湖邊喝水，是布農族重要的傳統領域。」上述的◇指的是下列哪項？", options: ["澄清湖", "日月潭", "嘉明湖", "七彩湖"], ans: 2 },
+            { type: "MC", q: "下列哪一種社會規範，會明定處罰方式與範圍？", options: ["風俗習慣", "倫理道德", "宗教信仰", "法律"], ans: 3 },
+            { type: "MC", q: "下列哪一項是制定少年事件處理法的目的？", options: ["健全兒少身心發展", "讓行為偏差的未成年能改過自新", "保護未成年不受侵害", "以上都是"], ans: 3 },
+            { type: "MC", q: "下列哪一條是在世界地圖上的假想線，將地球分為南、北半球？", options: ["北回歸線", "赤道", "180度經線", "0度經線"], ans: 1 },
+            { type: "MC", q: "「豪豪是位虔誠的穆斯林，平時謹遵古蘭經的教誨，遵守禁食豬肉、不飲酒等戒律。」上述豪豪的行為，是受到下列哪種規範的影響？", options: ["倫理道德", "法律", "宗教信仰", "風俗習慣"], ans: 2 },
+            { type: "MC", q: "下列有關宗教信仰的敘述，哪項錯誤？", options: ["源自人類對超自然力量的敬畏", "原住民族相信萬物有靈", "Gaga是漢人跨越地域的信仰", "透過閱讀經典、遵守戒律等方式，規範信徒的言行"], ans: 2 },
+            { type: "MC", q: "「在原住民族的社會中，族人的凝聚力是延續部落文化及精神的支柱，像是鄒族的成年男子利用『◇』，討論部落事務。」上述的◇應該填入下列哪一項？", options: ["庫巴", "宗祠", "家廟", "農耕地"], ans: 0 },
+            { type: "MC", q: "下列哪一項是原住民族母系社會的特色？", options: ["子女隨母姓", "有廟會活動", "廟宇是重要信仰中心", "女方婚後隨夫居住"], ans: 0 },
+            { type: "MC", q: "阿光是生活在史前時期八仙洞遺址的居民，他較可能居住在下列哪一個地方？", options: ["架高的干欄式住屋", "利用木材和石柱搭建的房舍", "以磚瓦興建的三合院", "天然形成的洞穴"], ans: 3 },
+            { type: "MC", q: "下列有關臺灣島的敘述，哪一項正確？", options: ["由板塊推擠形成", "外型呈南北長、東西窄", "海洋資源豐富", "以上都正確"], ans: 3 },
+            { type: "MC", q: "文中提到「石棺中還發現精美的玉器飾品」，可以推測出當時的居民已經具備什麼觀念？", options: ["審美的觀念", "以漢人為主", "自行鑄造錢幣使用", "從樹上蒐集果實"], ans: 0 },
+            { type: "MC", q: "下列有關臺灣周圍島嶼的敘述，馬祖列島與哪一項因素有關？", options: ["和人們的宗教信仰有關", "和早期日本人來臺貿易有關", "位於臺灣島東側太平洋上", "位在臺灣島南方"], ans: 0 },
+            { type: "MC", q: "下列有關法律的敘述，哪一項錯誤？", options: ["明定處罰方式與範圍", "國家執行公權力的依據", "保障每個人的基本權利", "制定之後就不能再更改"], ans: 3 }
+        ];
+
+        let currentQuizQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        function startQuiz() {
+            const countValue = document.getElementById('question-count').value;
+            let shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+
+            if (countValue === "all") {
+                currentQuizQuestions = shuffled;
+            } else {
+                const limit = parseInt(countValue);
+                currentQuizQuestions = shuffled.slice(0, limit);
+            }
+
+            currentIndex = 0;
+            score = 0;
+
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            selectedOption = null;
+            document.getElementById('next-btn').classList.add('hidden');
+            
+            const qData = currentQuizQuestions[currentIndex];
+            document.getElementById('progress-text').innerText = `題目 ${currentIndex + 1} / ${currentQuizQuestions.length}`;
+            document.getElementById('score-text').innerText = `目前得分：${score} 分`;
+
+            const container = document.getElementById('question-container');
+            
+            if (qData.type === "TF") {
+                container.innerHTML = `
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 mb-4">${currentIndex + 1}. （是非題）${qData.q}</h3>
+                    <div class="space-y-3">
+                        <button onclick="checkAnswer(true, this)" class="w-full text-left p-4 bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-xl font-medium text-slate-700 transition flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center font-bold text-slate-500">○</span> 正確 (O)
+                        </button>
+                        <button onclick="checkAnswer(false, this)" class="w-full text-left p-4 bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-xl font-medium text-slate-700 transition flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center font-bold text-slate-500">×</span> 錯誤 (X)
+                        </button>
+                    </div>
+                `;
+            } else {
+                let optionsHtml = '';
+                qData.options.forEach((opt, idx) => {
+                    optionsHtml += `
+                        <button onclick="checkAnswer(${idx}, this)" class="w-full text-left p-4 bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-xl font-medium text-slate-700 transition flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center font-bold text-slate-500">${idx + 1}</span> ${opt}
+                        </button>
+                    `;
+                });
+
+                container.innerHTML = `
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 mb-4">${currentIndex + 1}. （選擇題）${qData.q}</h3>
+                    <div class="space-y-3">
+                        ${optionsHtml}
+                    </div>
+                `;
+            }
+        }
+
+        function checkAnswer(userAnswer, btnElement) {
+            if (selectedOption !== null) return;
+            selectedOption = userAnswer;
+
+            const qData = currentQuizQuestions[currentIndex];
+            const isCorrect = (userAnswer === qData.ans);
+
+            const buttons = document.querySelectorAll('#question-container button');
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (isCorrect) {
+                score += Math.round(100 / currentQuizQuestions.length);
+                btnElement.classList.remove('bg-slate-50', 'hover:bg-blue-50');
+                btnElement.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
+                btnElement.querySelector('span').classList.add('bg-emerald-500', 'text-white');
+            } else {
+                btnElement.classList.remove('bg-slate-50', 'hover:bg-blue-50');
+                btnElement.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-800');
+                btnElement.querySelector('span').classList.add('bg-rose-500', 'text-white');
+
+                buttons.forEach((btn, idx) => {
+                    if (qData.type === "TF") {
+                        if ((idx === 0 && qData.ans === true) || (idx === 1 && qData.ans === false)) {
+                            btn.classList.remove('bg-slate-50');
+                            btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
+                        }
+                    } else {
+                        if (idx === qData.ans) {
+                            btn.classList.remove('bg-slate-50');
+                            btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
+                        }
+                    }
+                });
+            }
+
+            document.getElementById('score-text').innerText = `目前得分：${score} 分`;
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < currentQuizQuestions.length) {
+                loadQuestion();
+            } else {
+                document.getElementById('quiz-screen').classList.add('hidden');
+                document.getElementById('result-screen').classList.remove('hidden');
+                document.getElementById('final-score').innerText = `您的總得分：${score} 分`;
+            }
+        }
+
+        function resetQuiz() {
+            document.getElementById('setup-screen').classList.remove('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+        }
+
+        function copyUrl() {
+            const urlInput = document.getElementById('share-url');
+            urlInput.select();
+            urlInput.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(urlInput.value);
+            alert('網址已成功複製！');
+        }
+    </script>
+</body>
+</html>
