@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿妮的社會第一~二單元線上測驗</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & 圓體 feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+            min-height: 100vh;
+        }
+        .quiz-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen">
+
+    <!-- 頂部導航列 -->
+    <header class="bg-emerald-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl">📚</span>
+                <h1 class="text-lg md:text-xl font-bold tracking-wide">阿妮的社會線上測驗 (第一~二單元)</h1>
+            </div>
+            <div id="score-board" class="hidden bg-emerald-700 px-3 py-1.5 rounded-full text-sm font-bold shadow-inner flex items-center space-x-2">
+                <span>目前得分: <span id="live-score">0</span> / <span id="total-possible">0</span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要內容區 -->
+    <main class="flex-grow max-w-3xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center">
+
+        <!-- 封面與開始畫面 -->
+        <div id="start-screen" class="quiz-card rounded-3xl shadow-xl p-8 border border-emerald-100 text-center animate-pop">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-sm">
+                🎒
+            </div>
+            <h2 class="text-2xl md:text-3xl font-black text-emerald-800 mb-3">五年級社會第一~二單元評量</h2>
+            <p class="text-slate-600 mb-6 leading-relaxed text-sm md:text-base">
+                本測驗涵蓋：臺灣地理位置與氣候、周圍海岸地形、史前文化與遺址、原住民族生態智慧、社會規範與法律等核心重點！挑戰自我，看看你能拿到幾分吧！🌟
+            </p>
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-left text-sm text-emerald-900 mb-6 space-y-2">
+                <p class="font-bold flex items-center">📌 測驗說明：</p>
+                <p>1. 包含是非題與選擇題，總計 20 道精選題。</p>
+                <p>2. 每題作答後會立即顯示對錯與詳細解析。</p>
+                <p>3. 支援隨時返回上一題或前往下一題，最後可查看完整錯題檢討。</p>
+            </div>
+            <button onclick="startQuiz()" class="w-full md:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center space-x-2 mx-auto">
+                <span>🚀 開始測驗</span>
+            </button>
+        </div>
+
+        <!-- 測驗作答畫面 -->
+        <div id="quiz-screen" class="hidden quiz-card rounded-3xl shadow-xl p-6 md:p-8 border border-slate-100">
+            <!-- 進度列 -->
+            <div class="flex justify-between items-center mb-4 text-sm font-semibold text-slate-500">
+                <span id="question-progress">題目 1 / 20</span>
+                <span id="question-type-badge" class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">是非題</span>
+            </div>
+            <div class="w-full bg-slate-200 h-2.5 rounded-full mb-6 overflow-hidden">
+                <div id="progress-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-300" style="width: 5%;"></div>
+            </div>
+
+            <!-- 題目內容 -->
+            <div class="mb-6">
+                <h3 id="question-text" class="text-lg md:text-xl font-bold text-slate-800 leading-relaxed">
+                    <!-- 題目將動態載入 -->
+                </h3>
+            </div>
+
+            <!-- 選項容器 -->
+            <div id="options-container" class="space-y-3 mb-6">
+                <!-- 選項將動態載入 -->
+            </div>
+
+            <!-- 即時回饋與解析區 -->
+            <div id="feedback-box" class="hidden rounded-2xl p-4 mb-6 transition-all border">
+                <div id="feedback-title" class="font-bold text-base mb-1"></div>
+                <div id="feedback-desc" class="text-sm leading-relaxed text-slate-700"></div>
+            </div>
+
+            <!-- 導航按鈕 -->
+            <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                <button id="prev-btn" onclick="prevQuestion()" class="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-600 font-bold transition flex items-center space-x-1 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span>⬅️ 上一題</span>
+                </button>
+                <button id="next-btn" onclick="nextQuestion()" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow transition flex items-center space-x-1">
+                    <span id="next-btn-text">下一題 ➡️</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 結算與成績單畫面 -->
+        <div id="result-screen" class="hidden quiz-card rounded-3xl shadow-xl p-6 md:p-8 border border-emerald-100 animate-pop text-center">
+            <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-sm">
+                🏆
+            </div>
+            <h2 class="text-2xl md:text-3xl font-black text-slate-800 mb-2">測驗結算完成！</h2>
+            <p class="text-slate-600 mb-6">恭喜阿妮完成第一、二單元社會評量練習！</p>
+            
+            <div class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl p-6 mb-6 shadow-md">
+                <div class="text-sm font-medium uppercase tracking-wider opacity-90 mb-1">你的最終得分</div>
+                <div class="text-5xl font-black tracking-tight"><span id="final-score">0</span> <span class="text-2xl font-normal">/ 100 分</span></div>
+                <div id="score-comment" class="mt-2 text-sm font-medium bg-emerald-700/50 py-1 px-3 rounded-full inline-block"></div>
+            </div>
+
+            <div class="text-left mb-6">
+                <h3 class="font-bold text-slate-800 mb-3 flex items-center text-lg">
+                    <span>📖 錯題檢討與詳細解析</span>
+                </h3>
+                <div id="review-container" class="space-y-4 max-h-80 overflow-y-auto pr-2">
+                    <!-- 錯題檢討動態產生 -->
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-3">
+                <button onclick="restartQuiz()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition flex items-center justify-center space-x-2">
+                    <span>🔄 重新測驗一次</span>
+                </button>
+                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="px-6 py-3 border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition flex items-center justify-center space-x-2">
+                    <span>⬆️ 回到頂部</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="text-center py-6 text-xs text-slate-400">
+        阿妮的社會線上測驗生成系統 &copy; 2026 國小社會科智慧輔助學習
+    </footer>
+
+    <!-- 題庫與互動邏輯 -->
+    <script>
+        // 題庫資料 (融合考卷甲卷與乙卷內容)
+        const quizData = [
+            {
+                type: "是非",
+                question: "考古學家主要以器物材質和製作方法等差異，劃分舊石器時期、新石器時期及金屬器時期。",
+                options: ["○ 正確", "× 錯誤"],
+                answer: 0,
+                explanation: "正確！考古學家正是依據石器製作技術（打製或磨製）以及是否有金屬器與陶器等材質差異，來劃分史前三大時期。"
+            },
+            {
+                type: "是非",
+                question: "原住民族的祖先認為萬物皆有神靈，在生活中相信「萬物有靈」。",
+                options: ["○ 正確", "× 錯誤"],
+                answer: 0,
+                explanation: "正確！原住民族傳統信仰普遍相信萬物皆有靈，對自然界抱持敬畏之心。"
+            },
+            {
+                type: "是非",
+                question: "未成年人違法時，法律沒有任何相關規定可以加以處置。",
+                options: ["○ 正確", "× 錯誤"],
+                answer: 1,
+                explanation: "錯誤！我國針對未成年人違法訂有相關法律（如少年事件處理法），會給予輔導、保護與處置，讓偏差行為能改過自新。"
+            },
+            {
+                type: "是非",
+                question: "西部海岸地形平坦，海岸線較筆直，出海口常有沙洲、沙灘與溼地。",
+                options: ["○ 正確", "× 錯誤"],
+                answer: 0,
+                explanation: "正確！臺灣西部海岸屬於沙岸地形，地形平直、沙洲與溼地廣布；而北部與東部則多岩岸與斷層海岸。"
+            },
+            {
+                type: "是非",
+                question: "臺灣位於東亞海運的中途要道，地理位置優越，是亞洲與太平洋地區海、空運的重要樞紐。",
+                options: ["○ 正確", "× 錯誤"],
+                answer: 0,
+                explanation: "正確！臺灣位居東亞海運重要樞紐，自十六世紀起便登上國際舞臺，吸引各方勢力前來貿易。"
+            },
+            {
+                type: "是非",
+                question: "如果傳統規範與現代社會需求產生衝突時，政府可以透過修法或立法來處理。",
+                options: ["○ 正確", "× 錯誤"],
+                answer: 0,
+                explanation: "正確！社會規範會隨著時代變遷而調整，當傳統規範與現代社會不合時，政府可依法修定法律以符合需求。"
+            },
+            {
+                type: "是非",
+                question: "臺南孔廟被稱為「全臺首學」，是清帝國統治臺灣後建立的第一座孔廟。",
+                options: ["○ 正確", "× 錯誤"],
+                answer: 1,
+                explanation: "錯誤！臺南孔廟是「鄭氏政權時期」建立的，並非清帝國統治後才建立。"
+            },
+            {
+                type: "是非",
+                question: "雅美族（達悟族）人只在每年 3 到 10 月食用飛魚，讓飛魚有時間繁殖，避免因人類捕食而滅絕。",
+                options: ["○ 正確", "× 錯誤"],
+                answer: 0,
+                explanation: "正確！這展現了原住民族順應自然與永續保育的生態智慧。"
+            },
+            {
+                type: "是非",
+                question: "長濱遺址的人們主要以跨海交易維生。",
+                options: ["○ 正確", "× 錯誤"],
+                answer: 1,
+                explanation: "錯誤！屬於舊石器時代的長濱遺址人們，主要以捕捉海中生物、採集植物與狩獵維生，尚未發展大規模跨海交易。"
+            },
+            {
+                type: "是非",
+                question: "早期臺灣的建築設計會考量氣候，例如老街的「騎樓」設計提供了遮陽擋雨的功能。",
+                options: ["○ 正確", "× 錯誤"],
+                answer: 0,
+                explanation: "正確！騎樓能有效應對臺灣多雨與日照強烈的氣候特徵。"
+            },
+            {
+                type: "選擇",
+                question: "下列哪一種社會規範，會明定處罰的方式與範圍，且是國家執行公權力的依據？",
+                options: ["① 風俗習慣", "② 倫理道德", "③ 宗教信仰", "④ 法律"],
+                answer: 3,
+                explanation: "正確答案是④法律。法律具備強制力與明確的罰則，是維護社會秩序的重要規範。"
+            },
+            {
+                type: "選擇",
+                question: "小安在歷史課本上看到某個史前遺址的介紹：居民以稻米為主食，會到山中打獵、飼養家禽家畜，並使用石刀、石棺及精美的玉器飾品（如人獸形玉玦）。請問這個遺址最可能是下列哪一個？",
+                options: ["① 十三行遺址", "② 圓山遺址", "③ 卑南遺址", "④ 長濱遺址"],
+                answer: 2,
+                explanation: "正確答案是③卑南遺址。卑南遺址以出土大量石板棺、精美玉器及豐富的農耕文化聞名。"
+            },
+            {
+                type: "選擇",
+                question: "下列哪一項是原住民族母系社會（如阿美族）的特色之一？",
+                options: ["① 財產大多由女兒繼承", "② 婚後男方隨妻子居住", "③ 子女姓氏隨母姓", "④ 以上選項都是"],
+                answer: 3,
+                explanation: "正確答案是④以上選項都是。母系社會以女性親族為核心，財產繼承、居住與姓氏多依循母系傳統。"
+            },
+            {
+                type: "選擇",
+                question: "臺灣島的高度持續增加且地震頻繁，主要是受到下列哪一項自然作用的影響？",
+                options: ["① 板塊推擠", "② 颱風頻繁", "③ 海流改變", "④ 人口過多"],
+                answer: 0,
+                explanation: "正確答案是①板塊推擠。臺灣位於歐亞板塊與菲律賓海板塊交界處，板塊持續推擠造就了高山與頻繁地震。"
+            },
+            {
+                type: "選擇",
+                question: "荷蘭人在大航海時代來臺建立貿易據點，當時主要輸出的商品是什麼？",
+                options: ["① 金礦與茶葉", "② 鹿皮與蔗糖", "③ 稻米與香蕉", "④ 煤礦與玉米"],
+                answer: 1,
+                explanation: "正確答案是②鹿皮與蔗糖。荷蘭人利用臺灣豐富的自然資源與鹿皮、蔗糖向外進行國際貿易。"
+            },
+            {
+                type: "選擇",
+                question: "下列哪一個原住民族主要居住在臺東縣蘭嶼鄉，發展出獨特的飛魚文化與地下屋建築？",
+                options: ["① 阿美族", "② 泰雅族", "③ 雅美族（達悟族）", "④ 邵族"],
+                answer: 2,
+                explanation: "正確答案是③雅美族（達悟族）。他們居住在蘭嶼，發展出適應海島氣候的半穴居地下屋與飛魚文化。"
+            },
+            {
+                type: "選擇",
+                question: "清帝國派哪一位將領帶兵進攻臺灣，擊敗鄭氏政權，將臺灣納入清帝國版圖？",
+                options: ["① 劉銘傳", "② 施琅", "③ 鄭經", "④ 沈葆楨"],
+                answer: 1,
+                explanation: "正確答案是②施琅。清帝國派施琅進攻臺灣，使明鄭時期結束。"
+            },
+            {
+                type: "選擇",
+                question: "為了適應冬季東北季風帶來的強風與日晒，新竹地區發展出利用天時製作哪一項著名特產？",
+                options: ["① 鳳梨酥", "② 柿餅", "③ 茶葉", "④ 烏魚子"],
+                answer: 1,
+                explanation: "正確答案是②柿餅。新竹的九降風（強烈東北季風）提供了乾燥與製作柿餅的最佳天然條件。"
+            },
+            {
+                type: "選擇",
+                question: "鄭氏政權派軍隊到臺灣各地從事屯田開墾，下列哪一個地名與當時軍隊駐守（例如前鋒鎮、後衝鎮等）的歷史有關？",
+                options: ["① 臺北淡水", "② 臺南左營、新營", "③ 基隆和平島", "④ 臺中大甲"],
+                answer: 1,
+                explanation: "正確答案是②臺南左營、新營。這些地名皆源自明鄭時期軍隊駐防開墾的編制名稱。"
+            },
+            {
+                type: "選擇",
+                question: "下列關於史前時代各時期的敘述，哪一項是**錯誤**的？",
+                options: ["① 舊石器時代已知用火", "② 新石器時代發展農業聚落", "③ 金屬器時代開始煉製鐵器", "④ 長濱遺址的人們生活在地下屋"],
+                answer: 3,
+                explanation: "正確答案是④。長濱遺址屬於舊石器時代，住在天然洞穴中；地下屋是雅美族（達悟族）因應海島風雨發展的現代原住民建築。"
+            }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(quizData.length).fill(null);
+        let score = 0;
+
+        // DOM 元素
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const scoreBoard = document.getElementById('score-board');
+        const liveScore = document.getElementById('live-score');
+        const totalPossible = document.getElementById('total-possible');
+        
+        const questionProgress = document.getElementById('question-progress');
+        const questionTypeBadge = document.getElementById('question-type-badge');
+        const progressBar = document.getElementById('progress-bar');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackBox = document.getElementById('feedback-box');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackDesc = document.getElementById('feedback-desc');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtnText = document.getElementById('next-btn-text');
+        const finalScore = document.getElementById('final-score');
+        const scoreComment = document.getElementById('score-comment');
+        const reviewContainer = document.getElementById('review-container');
+
+        totalPossible.innerText = quizData.length * 5; // 每題5分，總分100
+
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            scoreBoard.classList.remove('hidden');
+            currentIdx = 0;
+            userAnswers = new Array(quizData.length).fill(null);
+            score = 0;
+            updateLiveScore();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = quizData[currentIdx];
+            questionProgress.innerText = `題目 ${currentIdx + 1} / ${quizData.length}`;
+            questionTypeBadge.innerText = q.type === "是非" ? "是非題" : "選擇題";
+            progressBar.style.width = `${((currentIdx + 1) / quizData.length) * 100}%`;
+            questionText.innerText = `${currentIdx + 1}. ${q.question}`;
+
+            optionsContainer.innerHTML = '';
+            feedbackBox.classList.add('hidden');
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 font-medium text-slate-700 transition flex items-center justify-between group";
+                btn.innerHTML = `<span>${opt}</span><span class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-xs group-hover:border-emerald-500 group-hover:text-emerald-600"></span>`;
+                
+                // 如果已經回答過該題，恢復狀態
+                if (userAnswers[currentIdx] !== null) {
+                    btn.disabled = true;
+                    if (idx === q.answer) {
+                        btn.className = "w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-100 font-bold text-emerald-900 flex items-center justify-between";
+                    } else if (userAnswers[currentIdx] === idx) {
+                        btn.className = "w-full text-left p-4 rounded-2xl border-2 border-rose-400 bg-rose-100 font-bold text-rose-900 flex items-center justify-between";
+                    }
+                } else {
+                    btn.onclick = () => selectAnswer(idx);
+                }
+                optionsContainer.appendChild(btn);
+            });
+
+            // 如果已經回答過，顯示回饋
+            if (userAnswers[currentIdx] !== null) {
+                showFeedback(userAnswers[currentIdx] === q.answer, q.explanation);
+            }
+
+            prevBtn.disabled = currentIdx === 0;
+            nextBtnText.innerText = currentIdx === quizData.length - 1 ? "📊 查看結算" : "下一題 ➡️";
+        }
+
+        function selectAnswer(selectedIdx) {
+            const q = quizData[currentIdx];
+            userAnswers[currentIdx] = selectedIdx;
+            const isCorrect = selectedIdx === q.answer;
+
+            if (isCorrect) {
+                score += 5;
+                updateLiveScore();
+            }
+
+            // 鎖定選項按鈕
+            const buttons = optionsContainer.getElementsByTagName('button');
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = true;
+                if (i === q.answer) {
+                    buttons[i].className = "w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-100 font-bold text-emerald-900 flex items-center justify-between";
+                } else if (i === selectedIdx) {
+                    buttons[i].className = "w-full text-left p-4 rounded-2xl border-2 border-rose-400 bg-rose-100 font-bold text-rose-900 flex items-center justify-between";
+                }
+            }
+
+            showFeedback(isCorrect, q.explanation);
+        }
+
+        function showFeedback(isCorrect, explanation) {
+            feedbackBox.classList.remove('hidden');
+            if (isCorrect) {
+                feedbackBox.className = "rounded-2xl p-4 mb-6 bg-emerald-50 border border-emerald-300 text-emerald-900 animate-pop";
+                feedbackTitle.innerHTML = "✨ 回答正確！太棒了！";
+            } else {
+                feedbackBox.className = "rounded-2xl p-4 mb-6 bg-rose-50 border border-rose-300 text-rose-900 animate-pop";
+                feedbackTitle.innerHTML = "❌ 答錯囉！別氣餒，看解析學起來：";
+            }
+            feedbackDesc.innerText = explanation;
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                loadQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentIdx < quizData.length - 1) {
+                currentIdx++;
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function updateLiveScore() {
+            liveScore.innerText = score;
+        }
+
+        function finishQuiz() {
+            quizScreen.classList.add('hidden');
+            scoreBoard.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            finalScore.innerText = score;
+
+            if (score === 100) {
+                scoreComment.innerText = "🌟 太神啦！滿分過關，社會小達人非你莫屬！";
+            } else if (score >= 80) {
+                scoreComment.innerText = "🎉 表現非常優秀！觀念掌握得很紮實！";
+            } else if (score >= 60) {
+                scoreComment.innerText = "👍 及格過關！再複習一下錯題會更棒喔！";
+            } else {
+                scoreComment.innerText = "💪 加油！多練習幾次一定能拿高分！";
+            }
+
+            // 產生錯題或全部檢討清單
+            reviewContainer.innerHTML = '';
+            quizData.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = userAns === q.answer;
+                
+                const item = document.createElement('div');
+                item.className = `p-4 rounded-2xl border ${isCorrect ? 'bg-emerald-50/50 border-emerald-200' : 'bg-rose-50/50 border-rose-200'}`;
+                
+                item.innerHTML = `
+                    <div class="flex items-start justify-between mb-1">
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${isCorrect ? 'bg-emerald-200 text-emerald-800' : 'bg-rose-200 text-rose-800'}">
+                            第 ${idx + 1} 題 ${isCorrect ? '答對' : '答錯'}
+                        </span>
+                        <span class="text-xs text-slate-500">${q.type}</span>
+                    </div>
+                    <p class="font-bold text-slate-800 text-sm mb-2">${q.question}</p>
+                    <div class="text-xs space-y-1 text-slate-600">
+                        <p>你的選擇：<span class="font-medium ${isCorrect ? 'text-emerald-700' : 'text-rose-600'}">${userAns !== null ? q.options[userAns] : '未作答'}</span></p>
+                        ${!isCorrect ? `<p>正確答案：<span class="font-bold text-emerald-700">${q.options[q.answer]}</span></p>` : ''}
+                        <p class="mt-1 pt-1 border-t border-slate-200 text-slate-700">💡 <b>解析：</b>${q.explanation}</p>
+                    </div>
+                `;
+                reviewContainer.appendChild(item);
+            });
+        }
+
+        function restartQuiz() {
+            resultScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
